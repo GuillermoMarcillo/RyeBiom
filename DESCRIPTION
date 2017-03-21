@@ -1,0 +1,12 @@
+Package: RyeBiom
+Type: Package
+Title: Point simulation of rye cover crop under ideal conditions 
+Version: 0.1.0
+Author: Guillermo Marcillo
+Maintainer: Guillermo Marcillo <marcillo@iastate.edu>
+Description:
+   A representation of cover crop growth under non-stress conditions
+   based on a simple resource capture and transformation approach.
+License: What license is it under?
+Encoding: UTF-8
+LazyData: true
