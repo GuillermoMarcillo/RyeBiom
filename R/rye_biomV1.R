@@ -25,6 +25,9 @@ rye_biomV1 <- function(param, weather, sdate, tdate){
   TTM= param["TTM"]
   TTL= param["TTL"]
 
+  sdate= lubridate::yday(as.character(sdate))      #Transform date to julian days & ensure simulation runs for 2 consecutive years
+  tdate= lubridate::yday(as.character(tdate)) + 365
+
   TT= rep(NA, tdate)                                #Define state variables
   B= rep(NA, tdate)
   LAI= rep(NA, tdate)
@@ -56,7 +59,6 @@ rye_biomV1 <- function(param, weather, sdate, tdate){
                      LAI= LAI[sdate:tdate],
                      B= B[sdate:tdate]))
 }
-
 
 
 
