@@ -1,0 +1,58 @@
+# I am adding a small script I wrote to improve the reading capabilities of weather_rb in the future. It imports a weather dataset
+#directly from the source (e.g. a URL), without saving it first. Read comments below for more clarification
+
+#Example of an URL with climate donwscaled projections from Opennex/NASA for Ames/2016
+#The objective is to create 2 functions: for loading data and another for diagnostics plots
+#This is a very simplified version of the code at planet-os github; and should work fine for small datasets only. 
+#The original function includes options for bounding computing time but I found conflicts 
+#with the way the strings are passed as the argument (i.e file name)
+#http://planet-os.github.io/nasa-opennex-docs/#temperatures-in-chicago
+
+#Guillermo Marcillo, Agronomy department, ISU
+#Created: 3/13/2017
+#Last version: 3/13/2017
+
+library(ggplot2)
+library(dplyr)
+
+#Read data
+load.data<- function (ipaddr){
+    temps= read.csv(url(paste("http://opennex.planetos.com/direct-access/",ipaddr,"/data.csv", sep="")),
+                    colClasses = c(Date="Date"))
+  temps$Temperature= temps$Value - 273.15
+  temps
+}
+
+#Plot data
+do.graph<- function(temps){
+  by.month = temps %>% 
+    group_by(Date, Scenario) %>%
+    summarise(Mean=mean(Temperature),
+              Max=max(Temperature),
+              Min=min(Temperature))
+  
+  by.month$year= as.Date(format(by.month$Date, "%Y-01-01"))
+  
+  by.year= 
+    by.month %>%
+    group_by(year, Scenario) %>%
+    summarise(Temperature=max(Max))
+  
+  ggplot(by.year, aes(x=year, y=Temperature,
+                      color=Scenario, group=Scenario)) +
+    geom_line()+
+    stat_smooth(method="loess", level=.8) +
+    ggtitle(sprintf("Maximum mean temperature for warmest month using model %s",
+                    temps$Model[1]))
+}
+
+##Not print:#######
+##Testing functions
+#http://opennex.planetos.com/direct-access/GhMfJ/data.csv 
+
+Ames2016<- load.data("GhMfJ")
+Ames.temps<- do.graph(Ames2016)
+###End not print####
+
+
+
