@@ -17,47 +17,59 @@
 
 
 rye_biomV1 <- function(param, weather, sdate, tdate){
-  Tbase = param["Tbase"]                            #Define paramaters needed
-  RUE= param["RUE"]
-  K= param["K"]
-  alpha= param["alpha"]
-  LAImax= param["LAImax"]
-  TTM= param["TTM"]
-  TTL= param["TTL"]
+  if(length(param)!=7) stop('There are 7 parameters required for this fucntion.') # Quality check
+  Tbase = param[["Tbase"]]                            #Define paramaters needed
+  RUE= param[["RUE"]]
+  K= param[["K"]]
+  alpha= param[["alpha"]]
+  LAImax= param[["LAImax"]]
+  TTM= param[["TTM"]]
+  TTL= param[["TTL"]]
 
-  sdate= lubridate::yday(as.character(sdate))      #Transform date to julian days & ensure simulation runs for 2 consecutive years
-  tdate= lubridate::yday(as.character(tdate)) + 365
+  weather<-weather_rb(weather)
+  #####################
+  weather$Date<-as.Date(paste0(weather[,1],"-",format(strptime(weather[,2], format="%j"),
+                                                  format="%m-%d")))
+  indx.start<-which(weather$Date==sdate)
+  indx.end<-which(weather$Date==tdate)
+  if((indx.end-indx.start)!=(as.numeric(tdate-sdate))) stop('There are some missing rows in your weather data for selected time period.') # Quality check
+  ########################
+  #sdate= lubridate::yday(as.character(sdate))      #Transform date to julian days & ensure simulation runs for 2 consecutive years
+  #tdate= lubridate::yday(as.character(tdate)) + 365
 
-  TT= rep(NA, tdate)                                #Define state variables
-  B= rep(NA, tdate)
-  LAI= rep(NA, tdate)
 
-  TT[sdate]= 0                                     #Initialize state variables before simulation
-  LAI[sdate]= 0.01
-  B[sdate]= 1
+  TT= rep(NA, indx.end-indx.start)                                #Define state variables
+  B= rep(NA, indx.end-indx.start)
+  LAI= rep(NA, indx.end-indx.start)
 
-  for (day in sdate:(tdate-1)){                                        #Update state variables
-    dTT= max ((weather$maxt[day] + weather$mint[day])/2 - Tbase, 0)
-    if (TT[day] <= TTL){
-      dLAI= alpha * dTT * LAI[day] * max(LAImax - LAI[day], 0)
+  TT[1]= 0                                     #Initialize state variables before simulation
+  LAI[1]= 0.01
+  B[1]= 1
+
+  for (day in indx.start:(indx.end-1)){                                        #Update state variables
+     dTT= max ((weather$maxt[day] + weather$mint[day])/2 - Tbase, 0)
+  #   cat(day-indx.start+1,"-",TTL,"-",TT[day-indx.start+1],"\n")
+     if (TT[day-indx.start+1] <= TTL){
+      dLAI= alpha * dTT * LAI[day-indx.start+1] * max(LAImax - LAI[day-indx.start+1], 0)
     }else{
       dLAI= 0
     }
-    if(TT[day] <= TTM){
-      dB= RUE * (1 - exp(-K * LAI[day])) * weather$radn[day]
+
+    if(TT[day-indx.start+1] <= TTM){
+      dB= RUE * (1 - exp(-K * LAI[day-indx.start+1])) * weather$radn[day]
     }else{
       dB= 0
     }
 
-    TT[day + 1]= TT[day] + dTT
-    LAI[day + 1]= LAI[day] + dLAI
-    B[day + 1]= B[day] + dB
+    TT[day-indx.start+2]= TT[day-indx.start+1] + dTT
+    LAI[day-indx.start+2]= LAI[day-indx.start+1] + dLAI
+    B[day-indx.start+2]= B[day-indx.start+1] + dB
   }
 
-  return(data.frame( day= sdate:tdate,
-                     TT= TT[sdate:tdate],
-                     LAI= LAI[sdate:tdate],
-                     B= B[sdate:tdate]))
+  return(data.frame( day= weather$Date[indx.start:indx.end],
+                     TT= TT,
+                     LAI= LAI,
+                     B= B))
 }
 
 

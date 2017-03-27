@@ -16,8 +16,8 @@ weather_rb<- function(x){
 }
 
 #not print:
-#ames2016<- read.table("C:/Users/Guillermo/Dropbox/RyeBiom/Weather_files/Weather_Ames_2016.txt",
-#                      skip=11)
+#ames2016<- read.table("Weather_files/Weather_Ames_2016.txt",
+ #                     skip=11)
 
-ames2<- ames2016
-rownames(ames2)<- ames2016$V2
+#ames2<- ames2016
+#rownames(ames2)<- ames2016$V2
